@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from 'react-native'
 const AuthScreen: FC = () => {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>This is an empty screen</Text>
+      <Text style={styles.text}>This is an empty screen. AUTH</Text>
     </View>
   )
 }
