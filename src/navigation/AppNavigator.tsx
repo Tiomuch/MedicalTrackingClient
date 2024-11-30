@@ -56,8 +56,22 @@ const AppNavigator: React.FC = () => {
           component={AuthScreen}
           options={{ headerShown: false }}
         />
-        <Stack.Screen name="Registration" component={RegistrationScreen} />
-        <Stack.Screen name="RoleSelection" component={RoleSelectionScreen} />
+        <Stack.Screen
+          name="Registration"
+          component={RegistrationScreen}
+          options={{
+            headerTitle: 'Registration',
+            headerTitleAlign: 'center'
+          }}
+        />
+        <Stack.Screen
+          name="RoleSelection"
+          component={RoleSelectionScreen}
+          options={{
+            headerTitle: 'Role Selection',
+            headerTitleAlign: 'center'
+          }}
+        />
         <Stack.Screen
           name="Home"
           component={BottomTabNavigator}
