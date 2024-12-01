@@ -1,15 +1,29 @@
 import React, { FC, useState } from 'react'
 import { TextInput as RNTextInput, StyleSheet, View } from 'react-native'
 
+import { useNavigation } from '@react-navigation/native'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { Button, TextInput } from 'react-native-paper'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
+import { RootStackParamList } from '@navigation/AppNavigator'
+
+type RoleSelectionScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'RoleSelection'
+>
+
 const RoleSelectionScreen: FC = () => {
   const [code, setCode] = useState<string>('')
+  const { replace } = useNavigation<RoleSelectionScreenNavigationProp>()
 
   const handleChangeText = (text: string) => {
     const sanitized = text.replace(/[^0-9]/g, '').slice(0, 6)
     setCode(sanitized)
+  }
+
+  const onContinuePress = () => {
+    replace('Home')
   }
 
   return (
@@ -37,7 +51,7 @@ const RoleSelectionScreen: FC = () => {
         <Button
           icon="checkbox-marked-circle-outline"
           mode="elevated"
-          onPress={() => {}}
+          onPress={onContinuePress}
         >
           Continue
         </Button>

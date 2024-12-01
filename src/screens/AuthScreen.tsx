@@ -18,7 +18,7 @@ const AuthScreen: FC = () => {
   const [password, setPassword] = useState('')
   const [eyeEnabled, setEyeEnabled] = useState(true)
 
-  const { navigate } = useNavigation<AuthScreenNavigationProp>()
+  const { navigate, replace } = useNavigation<AuthScreenNavigationProp>()
 
   const onEyePress = () => {
     setEyeEnabled((prev) => !prev)
@@ -30,7 +30,7 @@ const AuthScreen: FC = () => {
 
   const onSignInPress = () => {
     // TODO change navigation to main screen
-    navigate('RoleSelection')
+    replace('Home')
   }
 
   const eyeIcon = useMemo(() => (eyeEnabled ? 'eye' : 'eye-off'), [eyeEnabled])

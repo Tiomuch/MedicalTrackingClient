@@ -3,6 +3,7 @@ import React from 'react'
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
+import { Icon } from 'react-native-paper'
 
 import AuthScreen from '@screens/AuthScreen'
 import MainScreen from '@screens/MainScreen'
@@ -26,7 +27,7 @@ const Tab = createBottomTabNavigator()
 
 function SearchStackNavigator() {
   return (
-    <Stack.Navigator>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Search" component={SearchScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
     </Stack.Navigator>
@@ -36,13 +37,39 @@ function SearchStackNavigator() {
 function BottomTabNavigator() {
   return (
     <Tab.Navigator>
-      <Tab.Screen name="Main" component={MainScreen} />
+      <Tab.Screen
+        name="Main"
+        component={MainScreen}
+        options={{
+          headerShown: false,
+          tabBarLabel: 'Main',
+          tabBarIcon: ({ color, size }) => (
+            <Icon source="home" color={color} size={size} />
+          )
+        }}
+      />
       <Tab.Screen
         name="Search"
         component={SearchStackNavigator}
-        options={{ headerShown: false }}
+        options={{
+          headerShown: false,
+          tabBarLabel: 'Search',
+          tabBarIcon: ({ color, size }) => (
+            <Icon source="folder-search" color={color} size={size} />
+          )
+        }}
       />
-      <Tab.Screen name="Settings" component={SettingsScreen} />
+      <Tab.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{
+          headerShown: false,
+          tabBarLabel: 'Settings',
+          tabBarIcon: ({ color, size }) => (
+            <Icon source="account-settings" color={color} size={size} />
+          )
+        }}
+      />
     </Tab.Navigator>
   )
 }
