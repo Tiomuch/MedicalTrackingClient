@@ -5,6 +5,8 @@ import { Button, Icon } from 'react-native-paper'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 const SettingsScreen: FC = () => {
+  const onLogoutPress = () => {}
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.box}>
@@ -13,7 +15,7 @@ const SettingsScreen: FC = () => {
         </View>
 
         <Button
-          icon="account-cowboy-hat-outline"
+          icon="email-edit-outline"
           mode="elevated"
           style={styles.editButton}
           onPress={() => {}}
@@ -22,7 +24,7 @@ const SettingsScreen: FC = () => {
         </Button>
 
         <Button
-          icon="account-multiple-plus-outline"
+          icon="shield-edit-outline"
           mode="elevated"
           style={styles.editButton}
           onPress={() => {}}
@@ -31,10 +33,10 @@ const SettingsScreen: FC = () => {
         </Button>
 
         <Button
-          icon="account-multiple-plus-outline"
+          icon="logout"
           mode="elevated"
           style={styles.logoutButton}
-          onPress={() => {}}
+          onPress={onLogoutPress}
         >
           Log out
         </Button>
@@ -59,10 +61,10 @@ const styles = StyleSheet.create({
     width: '100%'
   },
   editButton: {
-    backgroundColor: 'green'
+    backgroundColor: '#90EE90'
   },
   logoutButton: {
-    backgroundColor: 'red'
+    backgroundColor: '#FF7F7F'
   }
 })
 

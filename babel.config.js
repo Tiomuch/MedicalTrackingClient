@@ -9,7 +9,9 @@ module.exports = {
           '@screens': './src/screens',
           '@components': './src/components',
           '@navigation': './src/navigation',
-          '@utils': './src/utils'
+          '@utils': './src/utils',
+          '@store': './src/store/',
+          '@graphql': './src/graphql/'
         }
       }
     ]

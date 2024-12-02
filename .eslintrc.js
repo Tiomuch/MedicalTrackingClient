@@ -62,6 +62,12 @@ module.exports = {
           caseInsensitive: true
         }
       }
+    ],
+    'prettier/prettier': [
+      'error',
+      {
+        endOfLine: 'auto'
+      }
     ]
   }
 }
