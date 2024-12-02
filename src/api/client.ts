@@ -8,9 +8,14 @@ import {
 import { setContext } from '@apollo/client/link/context'
 import { onError } from '@apollo/client/link/error'
 
-import { clearTokens, getAccessToken, getRefreshToken, saveToken } from 'store'
+import {
+  clearTokens,
+  getAccessToken,
+  getRefreshToken,
+  saveToken
+} from '@store/index'
 
-const URL = 'http://localhost:3000/graphql'
+const URL = 'http://192.168.0.111:3001/graphql/'
 
 const httpLink = new HttpLink({
   uri: URL

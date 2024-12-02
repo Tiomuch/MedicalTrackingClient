@@ -53,6 +53,14 @@ module.exports = {
           {
             pattern: '@utils/**',
             group: 'internal'
+          },
+          {
+            pattern: '@api/**',
+            group: 'internal'
+          },
+          {
+            pattern: '@store/**',
+            group: 'internal'
           }
         ],
         pathGroupsExcludedImportTypes: ['internal', 'react'],

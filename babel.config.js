@@ -11,7 +11,7 @@ module.exports = {
           '@navigation': './src/navigation',
           '@utils': './src/utils',
           '@store': './src/store/',
-          '@graphql': './src/graphql/'
+          '@api': './src/api/'
         }
       }
     ]

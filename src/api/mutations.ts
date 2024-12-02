@@ -2,9 +2,7 @@ import { gql } from '@apollo/client'
 
 export const SEND_CODE = gql`
   mutation SendCode($email: String!) {
-    sendCode(email: $email) {
-      success
-    }
+    sendCode(email: $email)
   }
 `
 

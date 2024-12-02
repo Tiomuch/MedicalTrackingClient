@@ -6,7 +6,9 @@
       "@screens/*": ["screens/*"],
       "@components/*": ["components/*"],
       "@navigation/*": ["navigation/*"],
-      "@utils/*": ["utils/*"]
+      "@utils/*": ["utils/*"],
+      "@api/*": ["api/*"],
+      "@store/*": ["store/*"]
     }
   }
 }

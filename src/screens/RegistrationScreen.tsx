@@ -1,11 +1,13 @@
 import React, { FC, useMemo, useState } from 'react'
 import { StyleSheet, View } from 'react-native'
 
+import { useMutation } from '@apollo/client'
 import { useNavigation } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { Button, Icon, TextInput } from 'react-native-paper'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
+import { SEND_CODE } from '@api/mutations'
 import { RootStackParamList } from '@navigation/AppNavigator'
 
 type RegistrationScreenNavigationProp = NativeStackNavigationProp<
@@ -22,6 +24,12 @@ const RegistrationScreen: FC = () => {
 
   const { navigate } = useNavigation<RegistrationScreenNavigationProp>()
 
+  const [sendCode, { loading, error }] = useMutation(SEND_CODE, {
+    onError(error, clientOptions) {
+      console.log('error', error, clientOptions)
+    }
+  })
+
   const onEyePress = () => {
     setEyeEnabled((prev) => !prev)
   }
@@ -31,7 +39,22 @@ const RegistrationScreen: FC = () => {
   }
 
   const onSignUpPress = () => {
-    navigate('RoleSelection')
+    if (!email || !password || !confirmPassword) {
+      // TODO add toast and error indicator to text input
+      return
+    }
+
+    const formEmail = email.trim()
+    const formPassword = password.trim()
+    const formConfirmPassword = confirmPassword.trim()
+
+    if (formPassword !== formConfirmPassword) {
+      // TODO add toast and error indicator to text input
+      return
+    }
+
+    sendCode({ variables: { email: formEmail } })
+    // navigate('RoleSelection')
   }
 
   const eyeIcon = useMemo(() => (eyeEnabled ? 'eye' : 'eye-off'), [eyeEnabled])
