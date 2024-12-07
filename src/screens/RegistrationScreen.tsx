@@ -1,11 +1,15 @@
-import React, { FC, useMemo, useState } from 'react'
-import { StyleSheet, View } from 'react-native'
+import React, { FC, useMemo, useRef, useState } from 'react'
+import { TextInput as RNTextInput, StyleSheet, View } from 'react-native'
 
 import { useMutation } from '@apollo/client'
+import { yupResolver } from '@hookform/resolvers/yup'
 import { useNavigation } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import { Button, Icon, TextInput } from 'react-native-paper'
+import { Controller, useForm } from 'react-hook-form'
+import { Button, Icon, Text, TextInput } from 'react-native-paper'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import Toast from 'react-native-toast-message'
+import * as yup from 'yup'
 
 import { SEND_CODE } from '@api/mutations'
 import { RootStackParamList } from '@navigation/AppNavigator'
@@ -15,18 +19,52 @@ type RegistrationScreenNavigationProp = NativeStackNavigationProp<
   'Registration'
 >
 
+type validData = {
+  email: string
+  password: string
+  confirmPassword: string
+}
+
+const schema = yup.object().shape({
+  email: yup
+    .string()
+    .email('Invalid email format')
+    .required('Email is required'),
+  password: yup
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .required('Password is required'),
+  confirmPassword: yup
+    .string()
+    .oneOf([yup.ref('password')], 'Passwords must match')
+    .required('Confirm Password is required')
+})
+
 const RegistrationScreen: FC = () => {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [eyeEnabled, setEyeEnabled] = useState(true)
-  const [confirmPassword, setConfirmPassword] = useState('')
   const [confirmEyeEnabled, setConfirmEyeEnabled] = useState(true)
+
+  const passwordRef = useRef<RNTextInput>(null)
+  const confirmPasswordRef = useRef<RNTextInput>(null)
 
   const { navigate } = useNavigation<RegistrationScreenNavigationProp>()
 
-  const [sendCode, { loading, error }] = useMutation(SEND_CODE, {
-    onError(error, clientOptions) {
-      console.log('error', error, clientOptions)
+  const {
+    control,
+    handleSubmit,
+    formState: { errors }
+  } = useForm({
+    resolver: yupResolver(schema)
+  })
+
+  const [sendCode, { loading }] = useMutation(SEND_CODE, {
+    onError(error) {
+      console.log('Error', error)
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: error.message || 'Something went wrong'
+      })
     }
   })
 
@@ -38,23 +76,17 @@ const RegistrationScreen: FC = () => {
     setConfirmEyeEnabled((prev) => !prev)
   }
 
-  const onSignUpPress = () => {
-    if (!email || !password || !confirmPassword) {
-      // TODO add toast and error indicator to text input
-      return
-    }
+  const onSignUpPress = async (data: validData) => {
+    await sendCode({ variables: { email: data.email.trim() } })
+    navigate('RoleSelection')
+  }
 
-    const formEmail = email.trim()
-    const formPassword = password.trim()
-    const formConfirmPassword = confirmPassword.trim()
+  const onEmailSubmitEditing = () => {
+    passwordRef.current?.focus()
+  }
 
-    if (formPassword !== formConfirmPassword) {
-      // TODO add toast and error indicator to text input
-      return
-    }
-
-    sendCode({ variables: { email: formEmail } })
-    // navigate('RoleSelection')
+  const onPasswordSubmitEditing = () => {
+    confirmPasswordRef.current?.focus()
   }
 
   const eyeIcon = useMemo(() => (eyeEnabled ? 'eye' : 'eye-off'), [eyeEnabled])
@@ -71,46 +103,93 @@ const RegistrationScreen: FC = () => {
           <Icon source="account-plus" color="blue" size={100} />
         </View>
 
-        <TextInput
-          label="Email"
-          autoComplete="email"
-          inputMode="email"
-          keyboardType="email-address"
-          mode="outlined"
-          value={email}
-          onChangeText={setEmail}
+        <Controller
+          control={control}
+          name="email"
+          render={({ field: { onChange, value } }) => (
+            <TextInput
+              label="Email"
+              autoComplete="email"
+              inputMode="email"
+              keyboardType="email-address"
+              mode="outlined"
+              value={value}
+              onChangeText={onChange}
+              error={!!errors.email}
+              onSubmitEditing={onEmailSubmitEditing}
+            />
+          )}
         />
+        {errors.email && (
+          <Text variant="bodySmall" style={styles.errorText}>
+            {errors.email.message}
+          </Text>
+        )}
 
-        <TextInput
-          label="Password"
-          autoComplete="password"
-          mode="outlined"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry={eyeEnabled}
-          right={<TextInput.Icon icon={eyeIcon} onPress={onEyePress} />}
+        <Controller
+          control={control}
+          name="password"
+          render={({ field: { onChange, value } }) => (
+            <TextInput
+              ref={passwordRef}
+              label="Password"
+              autoComplete="password"
+              mode="outlined"
+              value={value}
+              onChangeText={onChange}
+              error={!!errors.password}
+              secureTextEntry={eyeEnabled}
+              right={<TextInput.Icon icon={eyeIcon} onPress={onEyePress} />}
+              onSubmitEditing={onPasswordSubmitEditing}
+            />
+          )}
         />
+        {errors.password && (
+          <Text variant="bodySmall" style={styles.errorText}>
+            {errors.password.message}
+          </Text>
+        )}
 
-        <TextInput
-          label="Confirm Password"
-          autoComplete="password"
-          mode="outlined"
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry={confirmEyeEnabled}
-          right={
-            <TextInput.Icon icon={confirmEyeIcon} onPress={onConfirmEyePress} />
-          }
+        <Controller
+          control={control}
+          name="confirmPassword"
+          render={({ field: { onChange, value } }) => (
+            <TextInput
+              ref={confirmPasswordRef}
+              label="Confirm Password"
+              autoComplete="password"
+              mode="outlined"
+              value={value}
+              onChangeText={onChange}
+              error={!!errors.confirmPassword}
+              secureTextEntry={confirmEyeEnabled}
+              right={
+                <TextInput.Icon
+                  icon={confirmEyeIcon}
+                  onPress={onConfirmEyePress}
+                />
+              }
+              onSubmitEditing={handleSubmit(onSignUpPress)}
+            />
+          )}
         />
+        {errors.confirmPassword && (
+          <Text variant="bodySmall" style={styles.errorText}>
+            {errors.confirmPassword.message}
+          </Text>
+        )}
 
         <Button
           icon="account-multiple-plus-outline"
           mode="elevated"
-          onPress={onSignUpPress}
+          onPress={handleSubmit(onSignUpPress)}
+          loading={loading}
+          disabled={loading}
         >
           Sign Up
         </Button>
       </View>
+      <Toast position="bottom" />
     </SafeAreaView>
   )
 }
@@ -129,6 +208,9 @@ const styles = StyleSheet.create({
   iconContainer: {
     alignItems: 'center',
     width: '100%'
+  },
+  errorText: {
+    color: 'red'
   }
 })
 

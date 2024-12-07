@@ -1,9 +1,9 @@
-import React, { FC, useState } from 'react'
-import { TextInput as RNTextInput, StyleSheet, View } from 'react-native'
+import React, { FC } from 'react'
+import { StyleSheet, TouchableOpacity, View } from 'react-native'
 
 import { useNavigation } from '@react-navigation/native'
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import { Button, TextInput } from 'react-native-paper'
+import { Icon, Text } from 'react-native-paper'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
 import { RootStackParamList } from '@navigation/AppNavigator'
@@ -14,51 +14,32 @@ type RoleSelectionScreenNavigationProp = NativeStackNavigationProp<
 >
 
 const RoleSelectionScreen: FC = () => {
-  const [code, setCode] = useState<string>('')
   const { replace } = useNavigation<RoleSelectionScreenNavigationProp>()
-
-  const handleChangeText = (text: string) => {
-    const sanitized = text.replace(/[^0-9]/g, '').slice(0, 6)
-    setCode(sanitized)
-  }
 
   const onContinuePress = () => {
     replace('Home')
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['bottom', 'top']}>
       <View style={styles.box}>
-        <View style={styles.codeInputContainer}>
-          {[...Array(6)].map((_, index) => (
-            <TextInput
-              key={index}
-              value={code[index] || ''}
-              editable={false}
-              style={styles.input}
-            />
-          ))}
-        </View>
-
-        <RNTextInput
-          value={code}
-          onChangeText={handleChangeText}
-          keyboardType="numeric"
-          style={styles.hiddenInput}
-          autoFocus
-        />
-
-        <Button
-          icon="checkbox-marked-circle-outline"
-          mode="elevated"
+        <TouchableOpacity
+          style={styles.buttonContainer}
           onPress={onContinuePress}
         >
-          Continue
-        </Button>
+          <Icon source="account-injury-outline" size={80} />
 
-        <Button icon="email-sync-outline" mode="text" onPress={() => {}}>
-          Resend Code
-        </Button>
+          <Text style={styles.buttonText}>Patient</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.buttonContainer}
+          onPress={onContinuePress}
+        >
+          <Icon source="doctor" size={80} />
+
+          <Text style={styles.buttonText}>Doctor</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   )
@@ -75,20 +56,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 16
   },
-  codeInputContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 12
+  buttonContainer: {
+    flex: 0.4,
+    backgroundColor: '#ADD8E6',
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center'
   },
-  input: {
-    flex: 1,
-    fontSize: 24,
-    backgroundColor: '#f2f2f2',
-    borderRadius: 8
-  },
-  hiddenInput: {
-    position: 'absolute',
-    opacity: 0
+  buttonText: {
+    fontSize: 40
   }
 })
 

@@ -29,7 +29,6 @@ const AuthScreen: FC = () => {
   }
 
   const onSignInPress = () => {
-    // TODO change navigation to main screen
     replace('Home')
   }
 
