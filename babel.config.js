@@ -14,7 +14,8 @@ module.exports = {
           '@api': './src/api/'
         }
       }
-    ]
+    ],
+    'react-native-reanimated/plugin'
   ],
   env: {
     production: {

@@ -1,7 +1,9 @@
 import React from 'react'
 
 import { ApolloProvider } from '@apollo/client'
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet'
 import ErrorBoundary from 'react-native-error-boundary'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { PaperProvider } from 'react-native-paper'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 
@@ -13,9 +15,13 @@ export default function App() {
     <ErrorBoundary>
       <ApolloProvider client={apolloClient}>
         <SafeAreaProvider>
-          <PaperProvider>
-            <AppNavigator />
-          </PaperProvider>
+          <GestureHandlerRootView>
+            <BottomSheetModalProvider>
+              <PaperProvider>
+                <AppNavigator />
+              </PaperProvider>
+            </BottomSheetModalProvider>
+          </GestureHandlerRootView>
         </SafeAreaProvider>
       </ApolloProvider>
     </ErrorBoundary>

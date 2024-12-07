@@ -1,49 +1,82 @@
-import { FC, RefObject, useState } from 'react'
-import { TextInput as RNTextInput, StyleSheet, Text, View } from 'react-native'
+import { FC, RefObject, useRef, useState } from 'react'
+import {
+  KeyboardAvoidingView,
+  TextInput as RNTextInput,
+  StyleSheet,
+  Text,
+  TouchableWithoutFeedback,
+  View
+} from 'react-native'
 
-import BottomSheet from '@gorhom/bottom-sheet'
-import { BottomSheetMethods } from '@gorhom/bottom-sheet/lib/typescript/types'
+import { BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet'
 import { Button, TextInput } from 'react-native-paper'
 
 type Props = {
-  bottomSheetRef: RefObject<BottomSheetMethods>
+  bottomSheetRef: RefObject<BottomSheetModal>
+  onContinuePress: () => void
+  onResendCodePress: () => void
 }
 
-const VerifyCodeBottomSheet: FC<Props> = ({ bottomSheetRef }) => {
+const VerifyCodeBottomSheet: FC<Props> = ({
+  bottomSheetRef,
+  onContinuePress,
+  onResendCodePress
+}) => {
   const [code, setCode] = useState<string>('')
+
+  const inputRef = useRef<RNTextInput>(null)
 
   const handleChangeText = (text: string) => {
     const sanitized = text.replace(/[^0-9]/g, '').slice(0, 6)
     setCode(sanitized)
   }
 
-  const onContinuePress = () => {}
-
-  const onResendCodePress = () => {}
+  const handleBoxPress = () => {
+    inputRef.current?.focus()
+  }
 
   return (
-    <BottomSheet ref={bottomSheetRef} snapPoints={['50%']} enablePanDownToClose>
-      <View style={styles.bottomSheetContainer}>
+    <BottomSheetModal
+      ref={bottomSheetRef}
+      style={{
+        borderWidth: 1,
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
+        borderColor: 'black'
+      }}
+      snapPoints={['50%']}
+    >
+      <BottomSheetView style={styles.bottomSheetContainer}>
         <Text style={styles.title}>Enter Verification Code</Text>
 
-        <View style={styles.codeInputContainer}>
-          {[...Array(6)].map((_, index) => (
-            <TextInput
-              key={index}
-              value={code[index] || ''}
-              editable={false}
-              style={styles.input}
-            />
-          ))}
-        </View>
+        <KeyboardAvoidingView
+          behavior="padding"
+          style={styles.keyboardAvoidingView}
+        >
+          <TouchableWithoutFeedback
+            onPress={handleBoxPress}
+            style={styles.keyboardAvoidingView}
+          >
+            <View style={styles.codeInputContainer}>
+              {[...Array(6)].map((_, index) => (
+                <TextInput
+                  key={index}
+                  value={code[index] || ''}
+                  editable={false}
+                  style={styles.input}
+                />
+              ))}
+            </View>
+          </TouchableWithoutFeedback>
 
-        <RNTextInput
-          value={code}
-          onChangeText={handleChangeText}
-          keyboardType="numeric"
-          style={styles.hiddenInput}
-          autoFocus
-        />
+          <RNTextInput
+            ref={inputRef}
+            value={code}
+            onChangeText={handleChangeText}
+            keyboardType="numeric"
+            style={styles.hiddenInput}
+          />
+        </KeyboardAvoidingView>
 
         <Button
           icon="checkbox-marked-circle-outline"
@@ -61,8 +94,8 @@ const VerifyCodeBottomSheet: FC<Props> = ({ bottomSheetRef }) => {
         >
           Resend Code
         </Button>
-      </View>
-    </BottomSheet>
+      </BottomSheetView>
+    </BottomSheetModal>
   )
 }
 
@@ -91,6 +124,9 @@ const styles = StyleSheet.create({
   hiddenInput: {
     position: 'absolute',
     opacity: 0
+  },
+  keyboardAvoidingView: {
+    width: '100%'
   }
 })
 
