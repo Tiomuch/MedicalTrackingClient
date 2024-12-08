@@ -22,3 +22,9 @@ export const clearTokens = () => {
   storage.delete(StorageKeys.ACCESS_TOKEN)
   storage.delete(StorageKeys.REFRESH_TOKEN)
 }
+
+export const storageLogout = () => {
+  storage.delete(StorageKeys.ACCESS_TOKEN)
+  storage.delete(StorageKeys.REFRESH_TOKEN)
+  storage.delete('_id')
+}

@@ -18,23 +18,24 @@ export const REFRESH_TOKEN = gql`
 export const LOGIN = gql`
   mutation Login($email: String!, $password: String!) {
     login(email: $email, password: $password) {
+      _id
+      email
+      role
       accessToken
       refreshToken
     }
   }
 `
 
-export const VERIFY_CODE = gql`
-  mutation VerifyCode($email: String!, $code: String!) {
-    verifyCode(email: $email, code: $code) {
-      success
-    }
-  }
-`
-
-export const REGISTER = gql`
-  mutation Register($email: String!, $password: String!, $name: String!) {
-    register(email: $email, password: $password, name: $name) {
+export const VERIFY_CODE_AND_REGISTER = gql`
+  mutation VerifyCodeAndRegister(
+    $email: String!
+    $code: String!
+    $password: String!
+  ) {
+    verifyCodeAndRegister(email: $email, code: $code, password: $password) {
+      _id
+      email
       accessToken
       refreshToken
     }
@@ -53,6 +54,15 @@ export const CHANGE_PASSWORD = gql`
   mutation ChangePassword($oldPassword: String!, $newPassword: String!) {
     changePassword(oldPassword: $oldPassword, newPassword: $newPassword) {
       success
+    }
+  }
+`
+
+export const UPDATE_USER = gql`
+  mutation UpdateUser($_id: ID!, $input: UpdateUserInput!) {
+    updateUser(_id: $_id, input: $input) {
+      _id
+      role
     }
   }
 `

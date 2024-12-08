@@ -13,14 +13,16 @@ import { Button, TextInput } from 'react-native-paper'
 
 type Props = {
   bottomSheetRef: RefObject<BottomSheetModal>
-  onContinuePress: () => void
+  onContinuePress: (code: string) => void
   onResendCodePress: () => void
+  loading: boolean
 }
 
 const VerifyCodeBottomSheet: FC<Props> = ({
   bottomSheetRef,
   onContinuePress,
-  onResendCodePress
+  onResendCodePress,
+  loading
 }) => {
   const [code, setCode] = useState<string>('')
 
@@ -33,6 +35,10 @@ const VerifyCodeBottomSheet: FC<Props> = ({
 
   const handleBoxPress = () => {
     inputRef.current?.focus()
+  }
+
+  const handleVerifyCode = () => {
+    onContinuePress(code)
   }
 
   return (
@@ -81,8 +87,9 @@ const VerifyCodeBottomSheet: FC<Props> = ({
         <Button
           icon="checkbox-marked-circle-outline"
           mode="elevated"
-          onPress={onContinuePress}
-          disabled={code.length < 6}
+          onPress={handleVerifyCode}
+          disabled={code.length < 6 || loading}
+          loading={loading}
         >
           Verify Code
         </Button>

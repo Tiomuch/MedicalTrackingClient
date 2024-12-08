@@ -20,6 +20,7 @@ export type RootStackParamList = {
   Home: undefined
   Search: undefined
   Profile: { userId: string }
+  Settings: undefined
 }
 
 const Stack = createNativeStackNavigator<RootStackParamList>()

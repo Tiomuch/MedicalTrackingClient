@@ -1,5 +1,10 @@
-import React, { FC, useEffect, useMemo, useRef, useState } from 'react'
-import { TextInput as RNTextInput, StyleSheet, View } from 'react-native'
+import React, { FC, useMemo, useRef, useState } from 'react'
+import {
+  Keyboard,
+  TextInput as RNTextInput,
+  StyleSheet,
+  View
+} from 'react-native'
 
 import { useMutation } from '@apollo/client'
 import { BottomSheetModal } from '@gorhom/bottom-sheet'
@@ -12,9 +17,10 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 import * as yup from 'yup'
 
-import { SEND_CODE } from '@api/mutations'
+import { SEND_CODE, VERIFY_CODE_AND_REGISTER } from '@api/mutations'
 import VerifyCodeBottomSheet from '@components/VerifyCodeBottomSheet'
 import { RootStackParamList } from '@navigation/AppNavigator'
+import { storage, StorageKeys } from '@store/index'
 
 type RegistrationScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -61,9 +67,8 @@ const RegistrationScreen: FC = () => {
     resolver: yupResolver(schema)
   })
 
-  const [sendCode, { loading }] = useMutation(SEND_CODE, {
+  const [sendCode, { loading: sendCodeLoading }] = useMutation(SEND_CODE, {
     onError(error) {
-      console.log('Error', error)
       Toast.show({
         type: 'error',
         text1: 'Error',
@@ -71,6 +76,17 @@ const RegistrationScreen: FC = () => {
       })
     }
   })
+
+  const [verifyCodeAndRegister, { loading: verifyCodeAndRegisterLoading }] =
+    useMutation(VERIFY_CODE_AND_REGISTER, {
+      onError(error) {
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: error.message || 'Something went wrong'
+        })
+      }
+    })
 
   const onEyePress = () => {
     setEyeEnabled((prev) => !prev)
@@ -81,11 +97,37 @@ const RegistrationScreen: FC = () => {
   }
 
   const onSignUpPress = async (data: validData) => {
-    await sendCode({ variables: { email: data.email.trim() } })
+    const response = await sendCode({ variables: { email: data.email.trim() } })
+
+    if (response.errors) return
+
+    Keyboard.dismiss()
     bottomSheetRef.current?.present()
   }
 
-  const onContinuePress = () => {
+  const onContinuePress = async (code: string) => {
+    const currentEmail = getValues('email')
+    const currentPassword = getValues('password')
+    const response = await verifyCodeAndRegister({
+      variables: { email: currentEmail.trim(), password: currentPassword, code }
+    })
+
+    console.log('response', response)
+
+    if (response.errors) return
+
+    storage.set('_id', response.data?.verifyCodeAndRegister?._id)
+    storage.set(
+      StorageKeys.ACCESS_TOKEN,
+      response.data?.verifyCodeAndRegister?.accessToken
+    )
+    storage.set(
+      StorageKeys.REFRESH_TOKEN,
+      response.data?.verifyCodeAndRegister?.refreshToken
+    )
+
+    Keyboard.dismiss()
+    bottomSheetRef.current?.close()
     navigate('RoleSelection')
   }
 
@@ -108,14 +150,6 @@ const RegistrationScreen: FC = () => {
     () => (confirmEyeEnabled ? 'eye' : 'eye-off'),
     [confirmEyeEnabled]
   )
-
-  useEffect(() => {
-    if (bottomSheetRef) {
-      setTimeout(() => {
-        bottomSheetRef.current?.present()
-      }, 500)
-    }
-  }, [bottomSheetRef])
 
   return (
     <>
@@ -205,8 +239,8 @@ const RegistrationScreen: FC = () => {
             icon="account-multiple-plus-outline"
             mode="elevated"
             onPress={handleSubmit(onSignUpPress)}
-            loading={loading}
-            disabled={loading}
+            loading={sendCodeLoading}
+            disabled={sendCodeLoading}
           >
             Sign Up
           </Button>
@@ -219,6 +253,7 @@ const RegistrationScreen: FC = () => {
         bottomSheetRef={bottomSheetRef}
         onContinuePress={onContinuePress}
         onResendCodePress={onResendCodePress}
+        loading={verifyCodeAndRegisterLoading}
       />
     </>
   )

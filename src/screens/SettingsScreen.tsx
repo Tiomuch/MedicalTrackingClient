@@ -1,11 +1,27 @@
 import React, { FC } from 'react'
 import { StyleSheet, View } from 'react-native'
 
+import { useNavigation } from '@react-navigation/native'
+import { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import { Button, Icon } from 'react-native-paper'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
+import { RootStackParamList } from '@navigation/AppNavigator'
+import { storageLogout } from '@store/index'
+
+type SettingsScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'Settings'
+>
+
 const SettingsScreen: FC = () => {
-  const onLogoutPress = () => {}
+  const { replace } = useNavigation<SettingsScreenNavigationProp>()
+
+  const onLogoutPress = () => {
+    storageLogout()
+
+    replace('Auth')
+  }
 
   return (
     <SafeAreaView style={styles.container}>
