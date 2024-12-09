@@ -15,12 +15,20 @@ type SettingsScreenNavigationProp = NativeStackNavigationProp<
 >
 
 const SettingsScreen: FC = () => {
-  const { replace } = useNavigation<SettingsScreenNavigationProp>()
+  const { replace, navigate } = useNavigation<SettingsScreenNavigationProp>()
 
   const onLogoutPress = () => {
     storageLogout()
 
     replace('Auth')
+  }
+
+  const onChangeEmailPress = () => {
+    navigate('ChangeEmail')
+  }
+
+  const onChangePasswordPress = () => {
+    navigate('ChangePassword')
   }
 
   return (
@@ -34,7 +42,7 @@ const SettingsScreen: FC = () => {
           icon="email-edit-outline"
           mode="elevated"
           style={styles.editButton}
-          onPress={() => {}}
+          onPress={onChangeEmailPress}
         >
           Change Email
         </Button>
@@ -43,7 +51,7 @@ const SettingsScreen: FC = () => {
           icon="shield-edit-outline"
           mode="elevated"
           style={styles.editButton}
-          onPress={() => {}}
+          onPress={onChangePasswordPress}
         >
           Change Password
         </Button>

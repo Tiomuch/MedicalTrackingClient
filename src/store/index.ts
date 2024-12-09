@@ -27,4 +27,9 @@ export const storageLogout = () => {
   storage.delete(StorageKeys.ACCESS_TOKEN)
   storage.delete(StorageKeys.REFRESH_TOKEN)
   storage.delete('_id')
+  storage.delete('email')
+  storage.delete('firstName')
+  storage.delete('lastName')
+  storage.delete('middleName')
+  storage.delete('phone')
 }

@@ -43,18 +43,26 @@ export const VERIFY_CODE_AND_REGISTER = gql`
 `
 
 export const CHANGE_EMAIL = gql`
-  mutation ChangeEmail($newEmail: String!) {
-    changeEmail(newEmail: $newEmail) {
-      success
-    }
+  mutation ChangeEmail(
+    $newEmail: String!
+    $currentEmail: String!
+    $code: String!
+  ) {
+    changeEmail(newEmail: $newEmail, currentEmail: $currentEmail, code: $code)
   }
 `
 
 export const CHANGE_PASSWORD = gql`
-  mutation ChangePassword($oldPassword: String!, $newPassword: String!) {
-    changePassword(oldPassword: $oldPassword, newPassword: $newPassword) {
-      success
-    }
+  mutation ChangePassword(
+    $email: String!
+    $currentPassword: String!
+    $newPassword: String!
+  ) {
+    changePassword(
+      email: $email
+      currentPassword: $currentPassword
+      newPassword: $newPassword
+    )
   }
 `
 
@@ -62,6 +70,11 @@ export const UPDATE_USER = gql`
   mutation UpdateUser($_id: ID!, $input: UpdateUserInput!) {
     updateUser(_id: $_id, input: $input) {
       _id
+      email
+      firstName
+      lastName
+      middleName
+      phone
       role
     }
   }

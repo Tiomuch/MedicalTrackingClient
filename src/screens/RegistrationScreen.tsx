@@ -20,7 +20,7 @@ import * as yup from 'yup'
 import { SEND_CODE, VERIFY_CODE_AND_REGISTER } from '@api/mutations'
 import VerifyCodeBottomSheet from '@components/VerifyCodeBottomSheet'
 import { RootStackParamList } from '@navigation/AppNavigator'
-import { storage, StorageKeys } from '@store/index'
+import { storage, StorageKeys, storageLogout } from '@store/index'
 
 type RegistrationScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -97,6 +97,8 @@ const RegistrationScreen: FC = () => {
   }
 
   const onSignUpPress = async (data: validData) => {
+    storageLogout()
+
     const response = await sendCode({ variables: { email: data.email.trim() } })
 
     if (response.errors) return
@@ -117,6 +119,7 @@ const RegistrationScreen: FC = () => {
     if (response.errors) return
 
     storage.set('_id', response.data?.verifyCodeAndRegister?._id)
+    storage.set('email', response.data?.verifyCodeAndRegister?.email)
     storage.set(
       StorageKeys.ACCESS_TOKEN,
       response.data?.verifyCodeAndRegister?.accessToken

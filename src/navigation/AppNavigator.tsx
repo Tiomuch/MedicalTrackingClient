@@ -6,6 +6,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { Icon } from 'react-native-paper'
 
 import AuthScreen from '@screens/AuthScreen'
+import ChangeEmailScreen from '@screens/ChangeEmailScreen'
+import ChangePasswordScreen from '@screens/ChangePasswordScreen'
 import MainScreen from '@screens/MainScreen'
 import ProfileScreen from '@screens/ProfileScreen'
 import RegistrationScreen from '@screens/RegistrationScreen'
@@ -21,6 +23,8 @@ export type RootStackParamList = {
   Search: undefined
   Profile: { userId: string }
   Settings: undefined
+  ChangeEmail: undefined
+  ChangePassword: undefined
 }
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
@@ -31,6 +35,20 @@ function SearchStackNavigator() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Search" component={SearchScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
+    </Stack.Navigator>
+  )
+}
+
+function SettingsStackNavigator() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen
+        name="Settings"
+        component={SettingsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen name="ChangeEmail" component={ChangeEmailScreen} />
+      <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
     </Stack.Navigator>
   )
 }
@@ -62,7 +80,7 @@ function BottomTabNavigator() {
       />
       <Tab.Screen
         name="Settings"
-        component={SettingsScreen}
+        component={SettingsStackNavigator}
         options={{
           headerShown: false,
           tabBarLabel: 'Settings',

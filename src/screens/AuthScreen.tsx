@@ -18,7 +18,7 @@ import * as yup from 'yup'
 
 import { LOGIN } from '@api/mutations'
 import { RootStackParamList } from '@navigation/AppNavigator'
-import { storage, StorageKeys } from '@store/index'
+import { storage, StorageKeys, storageLogout } from '@store/index'
 
 type AuthScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -76,6 +76,8 @@ const AuthScreen: FC = () => {
   }
 
   const onSignInPress = async (data: validData) => {
+    storageLogout()
+
     const response = await login({
       variables: { email: data.email.trim(), password: data.password }
     })
@@ -84,11 +86,12 @@ const AuthScreen: FC = () => {
     if (response.errors) return
 
     storage.set('_id', response.data?.login?._id)
+    storage.set('email', response.data?.login?.email)
     storage.set(StorageKeys.ACCESS_TOKEN, response.data?.login?.accessToken)
     storage.set(StorageKeys.REFRESH_TOKEN, response.data?.login?.refreshToken)
 
     Keyboard.dismiss()
-    if (response.data?.role) {
+    if (response.data?.login?.role) {
       replace('Home')
     } else {
       navigate('RoleSelection')

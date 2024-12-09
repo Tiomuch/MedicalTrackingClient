@@ -1,124 +1,260 @@
-import React, { FC } from 'react'
-import { StyleSheet, View } from 'react-native'
+import React, { FC, useEffect, useMemo, useState } from 'react'
+import {
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View
+} from 'react-native'
 
-import { Icon, Text } from 'react-native-paper'
+import { useMutation, useQuery } from '@apollo/client'
+import { yupResolver } from '@hookform/resolvers/yup'
+import { Controller, useForm } from 'react-hook-form'
+import {
+  ActivityIndicator,
+  Button,
+  Icon,
+  Text,
+  TextInput
+} from 'react-native-paper'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import Toast from 'react-native-toast-message'
+import * as yup from 'yup'
+
+import { UPDATE_USER } from '@api/mutations'
+import { GET_USER } from '@api/queries'
+import { storage } from '@store/index'
+
+type validData = {
+  firstName: string
+  lastName: string
+  middleName: string
+  phone: string
+}
+
+const schema = yup.object().shape({
+  firstName: yup.string().required('First name is required'),
+  lastName: yup.string().required('Last name is required'),
+  middleName: yup.string().required('Middle name is required'),
+  phone: yup.string().required('Phone number is required')
+})
 
 const MainScreen: FC = () => {
+  const [editEnabled, setEditEnabled] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  const {
+    loading: getUserLoading,
+    data,
+    refetch
+  } = useQuery(GET_USER, {
+    context: {
+      headers: {
+        Authorization: `Bearer ${storage.getString('accessToken')}`
+      }
+    },
+    variables: { id: storage.getString('_id') }
+  })
+
+  const [updateUser, { loading: updateUserLoading }] = useMutation(
+    UPDATE_USER,
+    {
+      context: {
+        headers: {
+          Authorization: `Bearer ${storage.getString('accessToken')}`
+        }
+      },
+      onError(error) {
+        console.log('Error', error)
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: error.message || 'Something went wrong'
+        })
+      }
+    }
+  )
+
+  console.log('data', data)
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+    setValue
+  } = useForm({
+    resolver: yupResolver(schema)
+  })
+
+  const handleEditPress = () => {
+    setEditEnabled((prev) => !prev)
+  }
+
+  const handleSavePress = async (data: validData) => {
+    await updateUser({
+      variables: { _id: storage.getString('_id'), input: { ...data } }
+    })
+  }
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    await refetch({ id: storage.getString('_id') })
+    setIsRefreshing(false)
+  }
+
+  useEffect(() => {
+    console.log('First')
+    if (data?.getUser && !isRefreshing) {
+      console.log('Second')
+      const {
+        firstName,
+        lastName,
+        middleName,
+        phone,
+        role
+        // eslint-disable-next-line no-unsafe-optional-chaining
+      } = data?.getUser
+
+      setValue('firstName', firstName ?? '')
+      setValue('lastName', lastName ?? '')
+      setValue('middleName', middleName ?? '')
+      setValue('phone', phone ?? '')
+
+      storage.set('firstName', firstName ?? '')
+      storage.set('lastName', lastName ?? '')
+      storage.set('middleName', middleName ?? '')
+      storage.set('phone', phone ?? '')
+      storage.set('role', role)
+    }
+  }, [data?.getUser, isRefreshing])
+
+  const inputDisabled = useMemo(
+    () => !editEnabled || getUserLoading || updateUserLoading,
+    [editEnabled, getUserLoading]
+  )
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.box}>
-        <View style={styles.topPartContainer}>
-          <View style={styles.iconContainer}>
-            <Icon source="account" size={80} />
-          </View>
+      <View style={styles.headerContainer}>
+        <View style={styles.headerPartContainer}>
+          <Text variant="headlineMedium">Profile</Text>
 
-          <View style={styles.topRightPartContainer}>
-            <Text>Name: Test Test Test</Text>
-
-            <Text>Date of birth: 01.01.1999</Text>
-
-            <Text>Gender: Male</Text>
-
-            <Text>Role: Patient</Text>
-
-            <Text>Blood group: O+</Text>
-
-            <Text>Phone number: +380999999999</Text>
-          </View>
+          {getUserLoading && <ActivityIndicator />}
         </View>
 
-        <View
-          style={{
-            flexDirection: 'row',
-            width: '100%',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}
-        >
-          <Text style={{ fontSize: 30 }}>Cardiology</Text>
+        <View style={styles.headerPartContainer}>
+          {editEnabled && (
+            <Button
+              icon="content-save-outline"
+              mode="contained-tonal"
+              onPress={handleSubmit(handleSavePress)}
+              loading={updateUserLoading}
+              disabled={updateUserLoading}
+            >
+              Save
+            </Button>
+          )}
 
-          <Icon source="chevron-down" size={40} />
-        </View>
-
-        <View
-          style={{
-            flexDirection: 'row',
-            width: '100%',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}
-        >
-          <Text style={{ fontSize: 30 }}>Dermatology</Text>
-
-          <Icon source="chevron-down" size={40} />
-        </View>
-
-        <View
-          style={{
-            flexDirection: 'row',
-            width: '100%',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}
-        >
-          <Text style={{ fontSize: 30 }}>Family Medicine</Text>
-
-          <Icon source="chevron-down" size={40} />
-        </View>
-
-        <View
-          style={{
-            flexDirection: 'row',
-            width: '100%',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}
-        >
-          <Text style={{ fontSize: 30 }}>Forensic Pathology</Text>
-
-          <Icon source="chevron-down" size={40} />
-        </View>
-
-        <View
-          style={{
-            flexDirection: 'row',
-            width: '100%',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}
-        >
-          <Text style={{ fontSize: 30 }}>Genetics and Genomics</Text>
-
-          <Icon source="chevron-down" size={40} />
-        </View>
-
-        <View
-          style={{
-            flexDirection: 'row',
-            width: '100%',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}
-        >
-          <Text style={{ fontSize: 30 }}>Neurology</Text>
-
-          <Icon source="chevron-down" size={40} />
-        </View>
-
-        <View
-          style={{
-            flexDirection: 'row',
-            width: '100%',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}
-        >
-          <Text style={{ fontSize: 30 }}>Gynecology</Text>
-
-          <Icon source="chevron-down" size={40} />
+          <TouchableOpacity onPress={handleEditPress}>
+            <Icon
+              source={editEnabled ? 'pencil-off-outline' : 'pencil-outline'}
+              color="blue"
+              size={24}
+            />
+          </TouchableOpacity>
         </View>
       </View>
+
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
+        }
+      >
+        <View style={styles.box}>
+          <Controller
+            control={control}
+            name="firstName"
+            render={({ field: { onChange, value } }) => (
+              <TextInput
+                label="First Name"
+                mode="outlined"
+                value={value}
+                onChangeText={onChange}
+                error={!!errors.firstName}
+                disabled={inputDisabled}
+              />
+            )}
+          />
+          {errors.firstName && (
+            <Text variant="bodySmall" style={styles.errorText}>
+              {errors.firstName.message}
+            </Text>
+          )}
+
+          <Controller
+            control={control}
+            name="lastName"
+            render={({ field: { onChange, value } }) => (
+              <TextInput
+                label="Last Name"
+                mode="outlined"
+                value={value}
+                onChangeText={onChange}
+                error={!!errors.lastName}
+                disabled={inputDisabled}
+              />
+            )}
+          />
+          {errors.lastName && (
+            <Text variant="bodySmall" style={styles.errorText}>
+              {errors.lastName.message}
+            </Text>
+          )}
+
+          <Controller
+            control={control}
+            name="middleName"
+            render={({ field: { onChange, value } }) => (
+              <TextInput
+                label="Middle Name"
+                mode="outlined"
+                value={value}
+                onChangeText={onChange}
+                error={!!errors.middleName}
+                disabled={inputDisabled}
+              />
+            )}
+          />
+          {errors.middleName && (
+            <Text variant="bodySmall" style={styles.errorText}>
+              {errors.middleName.message}
+            </Text>
+          )}
+
+          <Controller
+            control={control}
+            name="phone"
+            render={({ field: { onChange, value } }) => (
+              <TextInput
+                label="Phone Number"
+                mode="outlined"
+                value={value}
+                onChangeText={onChange}
+                error={!!errors.phone}
+                disabled={inputDisabled}
+              />
+            )}
+          />
+          {errors.phone && (
+            <Text variant="bodySmall" style={styles.errorText}>
+              {errors.phone.message}
+            </Text>
+          )}
+        </View>
+      </ScrollView>
+
+      <Toast position="bottom" />
     </SafeAreaView>
   )
 }
@@ -133,23 +269,27 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 16
   },
-  topPartContainer: {
+  errorText: {
+    color: 'red'
+  },
+  headerContainer: {
     width: '100%',
-    flexDirection: 'row',
-    gap: 16
-  },
-  topRightPartContainer: {
-    gap: 16,
-    flex: 0.5,
-    padding: 16
-  },
-  iconContainer: {
     backgroundColor: '#ADD8E6',
-    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    justifyContent: 'center',
-    flex: 0.5,
-    height: 200
+    minHeight: 60
+  },
+  headerPartContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: 8
+  },
+  scrollContainer: {
+    paddingBottom: 16
   }
 })
 
