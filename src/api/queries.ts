@@ -10,6 +10,9 @@ export const GET_USER = gql`
       middleName
       phone
       role
+      bloodGroup
+      birthDate
+      gender
     }
   }
 `

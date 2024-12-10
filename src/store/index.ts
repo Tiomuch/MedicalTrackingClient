@@ -12,12 +12,6 @@ export const saveToken = (accessToken: string, refreshToken: string) => {
   storage.set(StorageKeys.REFRESH_TOKEN, refreshToken)
 }
 
-export const getAccessToken = () =>
-  storage.getString(StorageKeys.ACCESS_TOKEN) || null
-
-export const getRefreshToken = () =>
-  storage.getString(StorageKeys.REFRESH_TOKEN) || null
-
 export const clearTokens = () => {
   storage.delete(StorageKeys.ACCESS_TOKEN)
   storage.delete(StorageKeys.REFRESH_TOKEN)
@@ -32,4 +26,8 @@ export const storageLogout = () => {
   storage.delete('lastName')
   storage.delete('middleName')
   storage.delete('phone')
+  storage.delete('bloodGroup')
+  storage.delete('birthDate')
+  storage.delete('gender')
+  storage.delete('position')
 }

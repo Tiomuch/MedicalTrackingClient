@@ -8,12 +8,7 @@ import {
 import { setContext } from '@apollo/client/link/context'
 import { onError } from '@apollo/client/link/error'
 
-import {
-  clearTokens,
-  getAccessToken,
-  getRefreshToken,
-  saveToken
-} from '@store/index'
+import { clearTokens, saveToken, storage, StorageKeys } from '@store/index'
 
 const URL = 'http://192.168.0.111:3001/graphql/'
 
@@ -22,7 +17,8 @@ const httpLink = new HttpLink({
 })
 
 const authLink = setContext(async (_, { headers }) => {
-  const token = getAccessToken()
+  const token = await storage.getString(StorageKeys.ACCESS_TOKEN)
+
   return {
     headers: {
       ...headers,
@@ -35,8 +31,13 @@ const errorLink = onError(
   ({ graphQLErrors, networkError, operation, forward }) => {
     if (graphQLErrors) {
       for (const err of graphQLErrors) {
-        if (err.extensions?.code === 'UNAUTHENTICATED') {
-          const refreshToken = getRefreshToken()
+        console.log('err', err)
+        if (
+          err.extensions?.code === 'UNAUTHENTICATED' ||
+          err.extensions?.code === 'INTERNAL_SERVER_ERROR'
+        ) {
+          const refreshToken = storage.getString(StorageKeys.REFRESH_TOKEN)
+          console.log('refreshToken', refreshToken)
 
           if (refreshToken) {
             // Return an Observable to retry the operation

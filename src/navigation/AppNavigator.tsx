@@ -14,6 +14,7 @@ import RegistrationScreen from '@screens/RegistrationScreen'
 import RoleSelectionScreen from '@screens/RoleSelectionScreen'
 import SearchScreen from '@screens/SearchScreen'
 import SettingsScreen from '@screens/SettingsScreen'
+import SplashScreen from '@screens/SplashScreen'
 
 export type RootStackParamList = {
   Auth: undefined
@@ -25,6 +26,7 @@ export type RootStackParamList = {
   Settings: undefined
   ChangeEmail: undefined
   ChangePassword: undefined
+  Splash: undefined
 }
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
@@ -97,6 +99,11 @@ const AppNavigator: React.FC = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator>
+        <Stack.Screen
+          name="Splash"
+          component={SplashScreen}
+          options={{ headerShown: false }}
+        />
         <Stack.Screen
           name="Auth"
           component={AuthScreen}

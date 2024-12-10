@@ -21,11 +21,6 @@ const RoleSelectionScreen: FC = () => {
   const { replace } = useNavigation<RoleSelectionScreenNavigationProp>()
 
   const [updateUser, { loading }] = useMutation(UPDATE_USER, {
-    context: {
-      headers: {
-        Authorization: `Bearer ${storage.getString('accessToken')}`
-      }
-    },
     onError(error) {
       console.log('Error', error)
       Toast.show({
