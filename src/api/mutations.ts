@@ -81,7 +81,7 @@ export const UPDATE_USER = gql`
 `
 
 export const UPLOAD_FILES = gql`
-  mutation UploadFiles($file: Upload!) {
-    uploadFiles(files: [$file])
+  mutation UploadFiles($files: [Upload!]!) {
+    uploadFiles(files: $files)
   }
 `

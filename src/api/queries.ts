@@ -13,6 +13,15 @@ export const GET_USER = gql`
       bloodGroup
       birthDate
       gender
+      medicalCategories {
+        category
+        visits {
+          date
+          diagnosis
+          description
+          files
+        }
+      }
     }
   }
 `

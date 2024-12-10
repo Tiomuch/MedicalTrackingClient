@@ -1,6 +1,7 @@
 import React, { FC, useEffect, useMemo, useState } from 'react'
 import {
   FlatList,
+  Linking,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -10,6 +11,7 @@ import {
 
 import { useMutation, useQuery } from '@apollo/client'
 import { yupResolver } from '@hookform/resolvers/yup'
+import { ReactNativeFile } from 'apollo-upload-client'
 import { Controller, useForm } from 'react-hook-form'
 import DocumentPicker from 'react-native-document-picker'
 import {
@@ -23,6 +25,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 import * as yup from 'yup'
 
+import { LOCAL_URL } from '@api/client'
 import { UPDATE_USER, UPLOAD_FILES } from '@api/mutations'
 import { GET_USER } from '@api/queries'
 import { storage } from '@store/index'
@@ -39,6 +42,7 @@ type validData = {
 }
 
 type Visit = {
+  __typename?: string
   date: string
   diagnosis?: string
   description: string
@@ -46,6 +50,7 @@ type Visit = {
 }
 
 type MedicalCategory = {
+  __typename?: string
   category: string
   visits: Visit[]
 }
@@ -93,8 +98,6 @@ const MainScreen: FC = () => {
     }
   )
 
-  console.log('data', data)
-
   const {
     control,
     handleSubmit,
@@ -120,9 +123,21 @@ const MainScreen: FC = () => {
   }
 
   const addVisit = (categoryIndex: number) => {
-    const newVisit: Visit = { date: new Date().toISOString(), description: '' }
-    const updatedCategories = [...medicalCategories]
-    updatedCategories[categoryIndex].visits.push(newVisit)
+    const newVisit: Visit = {
+      date: new Date().toISOString(),
+      description: ''
+    }
+    const copiedCategories = [...medicalCategories]
+
+    const updatedCategories = copiedCategories.map((category, index) =>
+      index === categoryIndex
+        ? {
+            ...category,
+            visits: [...category.visits, newVisit]
+          }
+        : category
+    )
+
     setMedicalCategories(updatedCategories)
   }
 
@@ -132,26 +147,44 @@ const MainScreen: FC = () => {
         type: [DocumentPicker.types.allFiles]
       })
 
-      const fileConfig = {
+      const fileConfig = new ReactNativeFile({
         uri: result.uri,
-        type: result.type,
-        name: result.name
-      }
+        name: result.name,
+        type: result.type
+      })
 
       const response = await uploadFiles({
-        variables: { file: fileConfig }
+        variables: { files: [fileConfig] }
       })
 
       const uploadedPaths = response?.data?.uploadFiles || []
+      const copiedCategories = [...medicalCategories]
 
-      const updatedCategories = [...medicalCategories]
-      const visit = updatedCategories[categoryIndex].visits[visitIndex]
-      visit.files = visit.files
-        ? [...visit.files, ...uploadedPaths]
-        : uploadedPaths
+      const updatedCategories = copiedCategories.map((category, index) =>
+        index === categoryIndex
+          ? {
+              ...category,
+              visits: category.visits.map((visit, ind) =>
+                ind === visitIndex
+                  ? {
+                      ...visit,
+                      files: [...(visit?.files ?? []), ...uploadedPaths]
+                    }
+                  : visit
+              )
+            }
+          : category
+      )
 
       setMedicalCategories(updatedCategories)
+
+      Toast.show({
+        type: 'success',
+        text1: 'Success',
+        text2: 'File uploaded'
+      })
     } catch (err) {
+      console.log('errOR', err)
       if (!DocumentPicker.isCancel(err)) {
         Toast.show({
           type: 'error',
@@ -166,20 +199,55 @@ const MainScreen: FC = () => {
     setEditEnabled((prev) => !prev)
   }
 
-  const handleSavePress = async (finalData: validData) => {
-    await updateUser({
-      variables: { _id: storage.getString('_id'), input: { ...finalData } }
-    })
-  }
-
   const handleRefresh = async () => {
     setIsRefreshing(true)
     await refetch({ id: storage.getString('_id') })
     setIsRefreshing(false)
   }
 
+  const handleSavePress = async (finalData: validData) => {
+    const res = await updateUser({
+      variables: {
+        _id: storage.getString('_id'),
+        input: { ...finalData, medicalCategories }
+      }
+    })
+
+    if (res.errors) return
+
+    handleRefresh()
+
+    Toast.show({
+      type: 'success',
+      text1: 'Success',
+      text2: 'Data updated'
+    })
+  }
+
+  const deleteVisit = (categoryIndex: number, visitIndex: number) => {
+    const updatedCategories = [...medicalCategories]
+    updatedCategories[categoryIndex].visits.splice(visitIndex, 1)
+    setMedicalCategories(updatedCategories)
+  }
+
+  const removeFile = (
+    categoryIndex: number,
+    visitIndex: number,
+    fileIndex: number
+  ) => {
+    const updatedCategories = [...medicalCategories]
+    const visit = updatedCategories[categoryIndex].visits[visitIndex]
+
+    if (visit.files) {
+      visit.files.splice(fileIndex, 1)
+      setMedicalCategories(updatedCategories)
+    }
+  }
+
   useEffect(() => {
     if (data?.getUser && !isRefreshing) {
+      console.log('data', data)
+
       const {
         firstName,
         lastName,
@@ -189,7 +257,8 @@ const MainScreen: FC = () => {
         bloodGroup,
         birthDate,
         gender,
-        position
+        position,
+        medicalCategories: medicalCategoriesApi
         // eslint-disable-next-line no-unsafe-optional-chaining
       } = data?.getUser
 
@@ -208,6 +277,8 @@ const MainScreen: FC = () => {
         storage.set('bloodGroup', bloodGroup ?? '')
         storage.set('birthDate', birthDate ?? '')
         storage.set('gender', gender ?? '')
+
+        setMedicalCategories(medicalCategoriesApi ?? [])
 
         setValue('bloodGroup', bloodGroup ?? '')
         setValue('birthDate', birthDate ?? '')
@@ -398,21 +469,36 @@ const MainScreen: FC = () => {
                   mode="outlined"
                   value={currentCategory}
                   onChangeText={setCurrentCategory}
+                  style={styles.categoryInput}
+                  disabled={inputDisabled}
                 />
-                <Button mode="contained" onPress={addCategory}>
+
+                <Button
+                  mode="contained"
+                  onPress={addCategory}
+                  disabled={inputDisabled}
+                >
                   Add
                 </Button>
               </View>
 
               <FlatList
+                nestedScrollEnabled
                 data={medicalCategories}
                 keyExtractor={(item, index) => `${item.category}-${index}`}
                 renderItem={({ item, index }) => (
                   <View style={styles.categoryCard}>
                     <View style={styles.categoryHeader}>
                       <Text variant="titleLarge">{item.category}</Text>
-                      <TouchableOpacity onPress={() => deleteCategory(index)}>
-                        <Icon source="delete" color="red" size={24} />
+                      <TouchableOpacity
+                        disabled={inputDisabled}
+                        onPress={() => deleteCategory(index)}
+                      >
+                        <Icon
+                          source="delete"
+                          color={inputDisabled ? 'gray' : 'red'}
+                          size={24}
+                        />
                       </TouchableOpacity>
                     </View>
 
@@ -422,6 +508,7 @@ const MainScreen: FC = () => {
                       renderItem={({ item: visit, index: visitIndex }) => (
                         <View style={styles.visitCard}>
                           <Text>Date: {visit.date}</Text>
+
                           <TextInput
                             label="Description"
                             mode="outlined"
@@ -434,7 +521,42 @@ const MainScreen: FC = () => {
                               setMedicalCategories(updatedCategories)
                             }}
                           />
+
+                          <View style={styles.fileList}>
+                            {visit.files?.map((fileUrl, fileIndex) => (
+                              <View
+                                key={fileIndex}
+                                style={styles.fileButtonContainer}
+                              >
+                                <Button
+                                  mode="outlined"
+                                  onPress={() => {
+                                    Linking.openURL(`${LOCAL_URL}${fileUrl}`)
+                                  }}
+                                  style={styles.fileButton}
+                                  disabled={inputDisabled}
+                                >
+                                  File {fileIndex + 1}
+                                </Button>
+                                <TouchableOpacity
+                                  onPress={() =>
+                                    removeFile(index, visitIndex, fileIndex)
+                                  }
+                                  style={styles.removeFileButton}
+                                  disabled={inputDisabled}
+                                >
+                                  <Icon
+                                    source="close"
+                                    color={inputDisabled ? 'gray' : 'red'}
+                                    size={16}
+                                  />
+                                </TouchableOpacity>
+                              </View>
+                            ))}
+                          </View>
+
                           <Button
+                            disabled={inputDisabled}
                             mode="outlined"
                             onPress={() => handleFilePick(index, visitIndex)}
                           >
@@ -442,10 +564,20 @@ const MainScreen: FC = () => {
                               ? `${visit.files.length} Files`
                               : 'Upload Files'}
                           </Button>
+
+                          <Button
+                            disabled={inputDisabled}
+                            mode="contained"
+                            onPress={() => deleteVisit(index, visitIndex)}
+                            style={styles.deleteVisitButton}
+                          >
+                            Delete Visit
+                          </Button>
                         </View>
                       )}
                       ListFooterComponent={
                         <Button
+                          disabled={inputDisabled}
                           mode="contained"
                           onPress={() => addVisit(index)}
                           style={styles.addVisitButton}
@@ -520,6 +652,7 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: 8
   },
   categoryCard: {
@@ -542,9 +675,35 @@ const styles = StyleSheet.create({
     marginTop: 8,
     backgroundColor: '#e6f7ff',
     padding: 8,
-    borderRadius: 8
+    borderRadius: 8,
+    gap: 8
   },
   addVisitButton: {
+    marginTop: 8
+  },
+  categoryInput: {
+    flex: 1
+  },
+  fileButtonContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 4
+  },
+  fileButton: {
+    borderRadius: 50,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginRight: 8
+  },
+  removeFileButton: {
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  deleteVisitButton: {
+    marginTop: 8,
+    backgroundColor: 'red'
+  },
+  fileList: {
     marginTop: 8
   }
 })

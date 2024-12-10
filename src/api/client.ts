@@ -1,18 +1,22 @@
 import {
   ApolloClient,
   ApolloLink,
-  HttpLink,
   InMemoryCache,
   Observable
 } from '@apollo/client'
 import { setContext } from '@apollo/client/link/context'
 import { onError } from '@apollo/client/link/error'
+import { removeTypenameFromVariables } from '@apollo/client/link/remove-typename'
+import { createUploadLink } from 'apollo-upload-client'
 
 import { clearTokens, saveToken, storage, StorageKeys } from '@store/index'
 
-const URL = 'http://192.168.0.111:3001/graphql/'
+export const LOCAL_URL = 'http://localhost:3001/graphql/'
+export const URL = 'http://192.168.0.111:3001/graphql/'
 
-const httpLink = new HttpLink({
+const removeTypenameLink = removeTypenameFromVariables()
+
+const httpLink = createUploadLink({
   uri: URL
 })
 
@@ -89,6 +93,6 @@ const errorLink = onError(
 )
 
 export const apolloClient = new ApolloClient({
-  link: ApolloLink.from([authLink, errorLink, httpLink]),
+  link: ApolloLink.from([authLink, errorLink, removeTypenameLink, httpLink]),
   cache: new InMemoryCache()
 })
