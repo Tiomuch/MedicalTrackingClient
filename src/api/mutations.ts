@@ -85,3 +85,9 @@ export const UPLOAD_FILES = gql`
     uploadFiles(files: $files)
   }
 `
+
+export const SHARE_CARD = gql`
+  mutation ShareCard($patientId: ID!, $doctorId: ID!) {
+    shareCard(patientId: $patientId, doctorId: $doctorId)
+  }
+`
